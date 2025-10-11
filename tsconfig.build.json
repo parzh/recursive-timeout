@@ -1,0 +1,9 @@
+{
+  "extends": ".",
+  "include": [
+    "src",
+  ],
+  "compilerOptions": {
+    "noEmit": false,
+  },
+}

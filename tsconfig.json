@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    // Output
+    "target": "es2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "noEmit": true, // TODO: override in the derived configs if needed
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // Development
+    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+  }
+}
