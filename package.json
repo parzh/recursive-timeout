@@ -1,8 +1,6 @@
 {
   "name": "recursive-timeout",
-  "version": "0.0.1",
-  "private // TODO:": "make it public",
-  "private": true,
+  "version": "0.0.3",
   "author": "Dmytro Parzhytskyi <parzhitsky@gmail.com> (https://parzh.com)",
   "description": "A simple solution to a classic problem: setInterval implemented as recursive setTimeout calls.",
   "license": "ISC",

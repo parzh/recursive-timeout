@@ -10,11 +10,11 @@ describe(clearRecursiveTimeout, () => {
   })
 
   it('should clear the scheduled timeout', async () => {
-    const timeout = createRecursiveTimeout(callback, 1000)
+    const timeout = createRecursiveTimeout(callback, 100)
 
     clearRecursiveTimeout(timeout)
 
-    await delay(1500)
+    await delay(150)
 
     expect(callback).not.toHaveBeenCalled()
   })
