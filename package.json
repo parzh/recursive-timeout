@@ -27,6 +27,11 @@
     "node": ">=18.0.0"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "main": "./dist/cjs/index.cjs",
   "types": "./dist/esm/index.d.ts",
   "module": "./dist/esm/index.js",
