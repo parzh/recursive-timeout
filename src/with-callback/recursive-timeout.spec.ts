@@ -13,9 +13,9 @@ describe(RecursiveTimeout, () => {
     ['clearInterval', clearInterval],
     ['clearTimeout', clearTimeout],
   ])('should be cancellable with %s', async (clearName, clear) => {
-    const timeout = createRecursiveTimeout(callback, 100)
+    const recursive = createRecursiveTimeout(callback, 100)
 
-    clear(timeout)
+    clear(recursive)
 
     await delay(150)
 
