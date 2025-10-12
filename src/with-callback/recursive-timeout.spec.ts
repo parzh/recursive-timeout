@@ -39,4 +39,18 @@ describe(RecursiveTimeout, () => {
 
     expect(callback).toHaveBeenCalledTimes(1)
   })
+
+  it('should show whether it is ref-ed or not', () => {
+    const recursive = createRecursiveTimeout(callback, 100)
+
+    expect(recursive.hasRef()).toBe(true)
+
+    for (const [methodName, hasRefExpected] of [['unref', false], ['ref', true]] as const) {
+      recursive[methodName]()
+
+      expect(recursive.hasRef()).toBe(hasRefExpected)
+    }
+
+    recursive.unref() // let it all go
+  })
 })
