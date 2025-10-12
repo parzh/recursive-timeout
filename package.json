@@ -1,9 +1,9 @@
 {
   "name": "recursive-timeout",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": "Dmytro Parzhytskyi <parzhitsky@gmail.com> (https://parzh.com)",
   "description": "A simple solution to a classic problem: setInterval implemented as recursive setTimeout calls.",
-  "license": "ISC",
+  "license": "MIT",
   "homepage": "https://github.com/parzh/recursive-timeout#readme",
   "repository": {
     "type": "git",
