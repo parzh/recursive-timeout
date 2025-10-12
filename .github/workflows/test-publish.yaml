@@ -99,9 +99,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # skip publish if package is marked as private
-          if [ "$(node -e \"process.stdout.write(require('./package.json').private ? 'true' : 'false')\")" = "true" ]; then
-            echo "package.json.private = true. Skipping publish."
-            exit 0
-          fi
           npm publish --provenance --access public
