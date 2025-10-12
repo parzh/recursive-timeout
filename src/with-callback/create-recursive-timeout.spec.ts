@@ -13,26 +13,26 @@ describe(createRecursiveTimeout, () => {
 
   it('should schedule next call only after the current call is finished', async () => {
     const startTime = Date.now()
-    const runsForOneSecond = vi.fn().mockImplementation(() => {
+    const longJob = vi.fn().mockImplementation(() => {
       const startTime = Date.now()
 
-      while (Date.now() - startTime < 1000) { /* do nothing */ }
+      while (Date.now() - startTime < 100) { /* do nothing */ }
 
       return Date.now()
     })
 
-    const timeout = createRecursiveTimeout(runsForOneSecond, 500)
+    const timeout = createRecursiveTimeout(longJob, 50)
 
-    await delay(3000) // I can't use fake timers, unfortunately
+    await delay(300) // I can't use fake timers, unfortunately
 
     timeout.clear()
 
-    expect(runsForOneSecond).toHaveBeenCalledTimes(2)
+    expect(longJob).toHaveBeenCalledTimes(2)
 
-    const returnValue1Expected = startTime + 500 + 1000
-    const returnValue2Expected = startTime + 500 + 1000 + 500 + 1000
+    const returnValue1Expected = startTime + 50 + 100
+    const returnValue2Expected = startTime + 50 + 100 + 50 + 100
 
-    expect(runsForOneSecond.mock.results[0].value / returnValue1Expected).toBeCloseTo(1)
-    expect(runsForOneSecond.mock.results[1].value / returnValue2Expected).toBeCloseTo(1)
+    expect(longJob.mock.results[0].value / returnValue1Expected).toBeCloseTo(1)
+    expect(longJob.mock.results[1].value / returnValue2Expected).toBeCloseTo(1)
   })
 })
