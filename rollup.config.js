@@ -16,8 +16,6 @@ const input = {
   promises: resolve('src/promises.ts'),
 }
 
-const external = ['util', /^node:/] // this produces a much better output than rollup-plugin-node-externals
-
 export default [
   {
     input,
@@ -26,7 +24,6 @@ export default [
       format: 'esm',
       sourcemap: true,
     },
-    external,
     plugins: [
       typescript({
         tsconfig: configPath,
@@ -43,7 +40,6 @@ export default [
       sourcemap: true,
       entryFileNames: '[name].cjs',
     },
-    external,
     plugins: [
       typescript({
         tsconfig: configPath,

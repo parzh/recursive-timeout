@@ -2,4 +2,7 @@ import * as promises from './promises'
 
 export { promises }
 
-export { getValue } from './get-value-callback'
+export {
+  createRecursiveTimeout as setRecursive,
+  createRecursiveTimeout as setInterval, // alias (allows drop-in replacement)
+} from './with-callback/create-recursive-timeout'
