@@ -21,4 +21,28 @@ describe(RecursiveTimeout, () => {
 
     expect(callback).not.toHaveBeenCalled()
   })
+
+  it('should allow delaying the call by refreshing the timeout instance', async () => {
+    const recursive = createRecursiveTimeout(callback, 200)
+
+    await delay(100)
+
+    recursive.refresh()
+
+    await delay(100)
+
+    recursive.refresh()
+
+    await delay(100)
+
+    recursive.refresh()
+
+    expect(callback).not.toHaveBeenCalled()
+
+    await delay(200 + 10)
+
+    clearTimeout(recursive)
+
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
 })
