@@ -34,10 +34,10 @@ setInterval(runsForOneSecond, 500)
 … while the "recursive timeout" approach necessarily waits for the callback to finish before scheduling the next call:
 
 ```js
-import { setInterval } from 'recursive-timeout'
+import { setRecursive } from 'recursive-timeout'
 
 console.log(Date.now(), 'Start')
-setInterval(runsForOneSecond, 500)
+setRecursive(runsForOneSecond, 500)
 // logs (approximately):
 // 1234567890000 Start
 // 1234567891500 Done!
@@ -59,52 +59,76 @@ npm install recursive-timeout
 
 ## Usage
 
-The API is straightforward and mirrors the native `setInterval` function.
-
-### Callback-Based API
-
-This is the standard way to use the package, ideal for most cases.
-
-<!-- *** -->
+The straightforward API of `setRecursive` and `clearRecursive` mirrors the native `setInterval` and `clearInterval` functions.
 
 #### ECMAScript
 
+This is the standard way to use the package, ideal for most cases.
+
 ```js
-import { setInterval } from 'recursive-timeout'
+import { setRecursive, clearRecursive } from 'recursive-timeout'
+
+setRecursive(() => console.log('hi'), 1000)
+setRecursive(console.log, 1000, 'hi')
 ```
 
-#### ECMAScript (promise-based)
-
-⚠️ _(coming soon)_ ⚠️
+To cancel the interval, pass the timer into `clearRecursive` or the standard `clearInterval`, or even `clearTimeout`:
 
 ```js
-import { setInterval } from 'recursive-timeout/promises'
+const recursive = setRecursive(console.log, 1000, 'hi')
+
+clearRecursive(recursive)
+clearInterval(recursive) // ✅ works
+clearTimeout(recursive) // ✅ also works
+```
+
+For TypeScript users, some additional checks are added:
+
+```ts
+function sum(a: number, b: number): void {
+  console.log(a + b)
+}
+
+setRecursive(sum, 100)
+// ❌ Error: not enough arguments
+
+setRecursive(sum, 100, 42)
+// ❌ Error: not enough arguments
+
+setRecursive(sum, 100, 42, 17)
+// ✅ OK (logs 59 every ~100 milliseconds)
+```
+
+#### ECMAScript (promise-based) – _coming soon_ ⚠️
+
+```js
+import { setRecursive, clearRecursive } from 'recursive-timeout/promises'
 ```
 
 ```js
 import { promises } from 'recursive-timeout'
 
-promises.setInterval(…)
+promises.setRecursive(…)
+promises.clearRecursive(…)
 ```
 
 #### CommonJS
 
 ```js
-const { setInterval } = require('recursive-timeout')
+const { setRecursive, clearRecursive } = require('recursive-timeout')
 ```
 
-#### CommonJS (promise-based)
-
-⚠️ _(coming soon)_ ⚠️
+#### CommonJS (promise-based) – _coming soon_ ⚠️
 
 ```js
-const { setInterval } = require('recursive-timeout/promises')
+const { setRecursive, clearRecursive } = require('recursive-timeout/promises')
 ```
 
 ```js
 const { promises } = require('recursive-timeout')
 
-promises.setInterval(…)
+promises.setRecursive(…)
+promises.clearRecursive(…)
 ```
 
 ## License
