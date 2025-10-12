@@ -25,17 +25,11 @@ describe(RecursiveTimeout, () => {
   it('should allow delaying the call by refreshing the timeout instance', async () => {
     const recursive = createRecursiveTimeout(callback, 200)
 
-    await delay(100)
+    for (let i = 0; i < 3; i += 1) {
+      await delay(100)
 
-    recursive.refresh()
-
-    await delay(100)
-
-    recursive.refresh()
-
-    await delay(100)
-
-    recursive.refresh()
+      recursive.refresh()
+    }
 
     expect(callback).not.toHaveBeenCalled()
 
