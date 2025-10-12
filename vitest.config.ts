@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8',
-      reporter: ['text'],
+      reporter: ['text', ...(process.env.CI ? ['html'] : [])],
       reportsDirectory: './coverage',
     },
     globals: true,
