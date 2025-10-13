@@ -1,5 +1,5 @@
 import type { RecursiveTimeout, ArgsShape } from './recursive-timeout'
 
-export function clearRecursiveTimeout(timeout: RecursiveTimeout<ArgsShape>): void {
-  timeout.clear()
+export function clearRecursiveTimeout(recursive: RecursiveTimeout<ArgsShape>): void {
+  recursive.clear()
 }

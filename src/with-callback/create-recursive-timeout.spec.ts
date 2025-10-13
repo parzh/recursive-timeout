@@ -4,11 +4,11 @@ import { RecursiveTimeout } from './recursive-timeout'
 
 describe(createRecursiveTimeout, () => {
   it('should create an instance of RecursiveTimeout class', () => {
-    const timeout = createRecursiveTimeout(() => {}, 10_000)
+    const recursive = createRecursiveTimeout(() => {}, 10_000)
 
-    expect(timeout).toBeInstanceOf(RecursiveTimeout)
+    expect(recursive).toBeInstanceOf(RecursiveTimeout)
 
-    timeout.clear()
+    recursive.clear()
   })
 
   it('should schedule next call only after the current call is finished', async () => {
@@ -21,11 +21,11 @@ describe(createRecursiveTimeout, () => {
       return Date.now()
     })
 
-    const timeout = createRecursiveTimeout(longJob, 50)
+    const recursive = createRecursiveTimeout(longJob, 50)
 
     await delay(300) // I can't use fake timers, unfortunately
 
-    timeout.clear()
+    recursive.clear()
 
     expect(longJob).toHaveBeenCalledTimes(2)
 

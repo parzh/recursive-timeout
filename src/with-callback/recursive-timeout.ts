@@ -29,6 +29,7 @@ export class RecursiveTimeout<Args extends ArgsShape> implements NodeJS.Timeout 
       // we're naming the tick function the same as the original callback
       [this.callback.name]: () => {
         this.callback(...this.args)
+        this.clear()
         this.setTimer(tick)
       },
     }
