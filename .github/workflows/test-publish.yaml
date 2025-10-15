@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+defaults:
+  run:
+    shell: bash -o pipefail {0}
+
 jobs:
   audit:
     name: Audit
