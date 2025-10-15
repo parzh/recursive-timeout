@@ -31,26 +31,26 @@
     "LICENSE"
   ],
   "main": "./dist/cjs/index.cjs",
-  "types": "./dist/esm/index.d.ts",
+  "types": "./dist/index.d.ts",
   "module": "./dist/esm/index.js",
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/esm/index.d.ts",
+        "types": "./dist/index.d.ts",
         "default": "./dist/esm/index.js"
       },
       "require": {
-        "types": "./dist/esm/index.d.ts",
+        "types": "./dist/index.d.ts",
         "default": "./dist/cjs/index.cjs"
       }
     },
     "./promises": {
       "import": {
-        "types": "./dist/esm/promises.d.ts",
+        "types": "./dist/promises.d.ts",
         "default": "./dist/esm/promises.js"
       },
       "require": {
-        "types": "./dist/esm/promises.d.ts",
+        "types": "./dist/promises.d.ts",
         "default": "./dist/cjs/promises.cjs"
       }
     }
