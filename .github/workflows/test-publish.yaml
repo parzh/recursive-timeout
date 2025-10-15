@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+defaults:
+  run:
+    shell: bash -o pipefail {0}
+
 jobs:
   audit:
     name: Audit
@@ -74,11 +78,36 @@ jobs:
           name: coverage
           path: coverage
 
-  publish:
+  detect_version_update:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    name: Publish on version update
+    name: Detect version update
+    runs-on: ubuntu-latest
+    outputs:
+      detected: ${{ steps.detect.outputs.detected }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - id: detect
+        run: |
+          CURRENT_VERSION=$(jq -r .version package.json)
+          PREVIOUS_VERSION=$(git show HEAD~1:package.json | jq -r .version)
+
+          if [[ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]]; then
+            echo "Version has been updated. Proceeding to publish."
+            echo "detected=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version has not changed. Skipping publish."
+            echo "detected=false" >> $GITHUB_OUTPUT
+          fi
+
+  publish:
+    name: Publish
     needs:
       - test
+      - detect_version_update
+    if: needs.detect_version_update.outputs.detected == 'true'
     permissions:
       contents: read
       id-token: write
@@ -90,24 +119,10 @@ jobs:
           node-version-file: '/.nvmrc'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Check for version update
-        id: check_version
-        run: |
-          CURRENT_VERSION=$(jq -r .version package.json)
-          PREVIOUS_VERSION=$(git show HEAD~1:package.json | jq -r .version)
+      - run: npm ci
+      - run: npm run build
 
-          if [[ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]]; then
-            echo "version_updated=true" >> $GITHUB_OUTPUT
-          fi
-
-      - if: steps.check_version.outputs.version_updated
-        run: npm ci
-
-      - if: steps.check_version.outputs.version_updated
-        run: npm run build
-
-      - if: steps.check_version.outputs.version_updated
-        name: Publish
+      - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
