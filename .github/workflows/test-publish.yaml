@@ -13,6 +13,28 @@ defaults:
     shell: bash -o pipefail {0}
 
 jobs:
+  check_version_update:
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')
+    name: Check version update on release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - run: |
+          CHANGED_FILES=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+
+          if ! echo "${CHANGED_FILES}" | grep -qx "package.json"; then
+            echo "::error::Release PRs must include an update to package.json."
+            exit 1
+          fi
+
+          if ! echo "${CHANGED_FILES}" | grep -qx "package-lock.json"; then
+            echo "::error::Release PRs must include an update to package-lock.json."
+            exit 1
+          fi
+
   audit:
     name: Audit
     runs-on: ubuntu-latest
@@ -95,10 +117,10 @@ jobs:
           PREVIOUS_VERSION=$(git show HEAD~1:package.json | jq -r .version)
 
           if [[ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]]; then
-            echo "Version has been updated. Proceeding to publish."
+            echo "::notice file=package.json,line=3::Version has been updated. Proceeding to publish."
             echo "detected=true" >> $GITHUB_OUTPUT
           else
-            echo "Version has not changed. Skipping publish."
+            echo "::notice::Version has not changed. Skipping publish."
             echo "detected=false" >> $GITHUB_OUTPUT
           fi
 
