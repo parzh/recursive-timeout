@@ -3,13 +3,16 @@ name: Check Version update on release
 on:
   pull_request:
     branches:
-      - release/*'
+      - 'release/*'
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - run: |
           CHANGED_FILES=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
 
