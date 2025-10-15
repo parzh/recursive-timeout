@@ -15,8 +15,6 @@ export default defineConfig({
         promises: resolve('src/promises.ts'),
       },
       fileName(format, entryName) {
-        console.log({ format, entryName })
-
         if (format === 'es') {
           return `esm/${entryName}.js`
         }
