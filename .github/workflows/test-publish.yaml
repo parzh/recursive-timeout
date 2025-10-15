@@ -95,10 +95,10 @@ jobs:
           PREVIOUS_VERSION=$(git show HEAD~1:package.json | jq -r .version)
 
           if [[ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]]; then
-            echo "Version has been updated. Proceeding to publish."
+            echo "::notice file=package.json,line=3::Version has been updated. Proceeding to publish."
             echo "detected=true" >> $GITHUB_OUTPUT
           else
-            echo "Version has not changed. Skipping publish."
+            echo "::notice::Version has not changed. Skipping publish."
             echo "detected=false" >> $GITHUB_OUTPUT
           fi
 
