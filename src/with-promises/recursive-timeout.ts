@@ -2,31 +2,116 @@ export type ArgsShape = readonly unknown[]
 
 export type Callback<Args extends ArgsShape> = (...args: Args) => void | Promise<void>
 
-/** @deprecated TODO: Remove when everything planned is supported */
-class NotSupportedError extends Error {
-  constructor() {
-    super(`Promise-based recursive timeout is not supported yet`)
-  }
+export interface RecursiveTimeoutOptions {
+  /**
+   * An optional AbortSignal to cancel the recursive timeout
+   */
+  signal?: AbortSignal
+
+  /**
+   * Set to `false` to indicate that the scheduled timeout should not
+   * require the Node.js event loop to remain active.
+   * @default true
+   */
+  ref?: boolean
 }
 
-export class RecursiveTimeout<Args extends ArgsShape> implements AsyncIterator<void, any, any> {
-  constructor(
-    protected readonly callback: Callback<Args>,
-    protected readonly delay: number | undefined,
-    protected readonly args: Args,
-  ) {
-    this.start()
-  }
+export class RecursiveTimeout<T = undefined> implements AsyncIterator<T, void, undefined> {
+  private timer?: NodeJS.Timeout
+  private aborted = false
+  private cleared = false
+  private readonly signal?: AbortSignal
+  private readonly ref: boolean
+  private onAbort?: () => void
+  private pendingReject?: (reason?: any) => void
 
-  protected start(): void {
-    throw new NotSupportedError()
+  constructor(
+    private readonly delay: number,
+    private readonly value?: T,
+    options?: RecursiveTimeoutOptions,
+  ) {
+    this.signal = options?.signal
+    this.ref = options?.ref !== false
+
+    if (this.signal?.aborted) {
+      this.aborted = true
+    } else if (this.signal) {
+      this.onAbort = () => {
+        this.aborted = true
+        this.clear()
+      }
+      this.signal.addEventListener('abort', this.onAbort, { once: true })
+    }
   }
 
   clear(): void {
-    throw new NotSupportedError()
+    this.cleared = true
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = undefined
+    }
+    if (this.pendingReject) {
+      this.pendingReject(new Error('Cleared'))
+      this.pendingReject = undefined
+    }
+    if (this.onAbort && this.signal) {
+      this.signal.removeEventListener('abort', this.onAbort)
+      this.onAbort = undefined
+    }
   }
 
-  next(): Promise<IteratorResult<void, any>> {
-    throw new NotSupportedError()
+  async next(): Promise<IteratorResult<T, void>> {
+    // If already cleared, return done immediately
+    if (this.cleared) {
+      return { done: true, value: undefined }
+    }
+
+    // If signal was already aborted before first iteration, throw
+    if (this.aborted) {
+      this.clear()
+      throw this.signal?.reason ?? new Error('AbortError')
+    }
+
+    // Wait for the delay
+    try {
+      await new Promise<void>((resolve, reject) => {
+        this.pendingReject = reject
+        
+        this.timer = setTimeout(() => {
+          this.timer = undefined
+          this.pendingReject = undefined
+          
+          if (this.aborted || this.cleared) {
+            reject(this.signal?.reason ?? new Error('AbortError'))
+          } else {
+            resolve()
+          }
+        }, this.delay)
+
+        if (!this.ref && this.timer) {
+          this.timer.unref()
+        }
+      })
+    } catch (error) {
+      this.clear()
+      throw error
+    }
+
+    // After waiting, check if we were cleared or aborted
+    if (this.cleared || this.aborted) {
+      this.clear()
+      throw this.signal?.reason ?? new Error('AbortError')
+    }
+
+    return { done: false, value: this.value as T }
+  }
+
+  return(): Promise<IteratorResult<T, void>> {
+    this.clear()
+    return Promise.resolve({ done: true, value: undefined })
+  }
+
+  [Symbol.asyncIterator](): AsyncIterator<T, void, undefined> {
+    return this
   }
 }
