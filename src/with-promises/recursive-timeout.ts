@@ -20,6 +20,7 @@ export class RecursiveTimeout<T = undefined> implements AsyncIterator<T, void, u
   private readonly ref: boolean
   private onAbort?: () => void
   private pendingReject?: (reason?: any) => void
+  private isFirstIteration = true
 
   constructor(
     private readonly delay: number,
@@ -70,7 +71,15 @@ export class RecursiveTimeout<T = undefined> implements AsyncIterator<T, void, u
       throw this.signal?.reason ?? new DOMException('The operation was aborted', 'AbortError')
     }
 
-    // Wait for the delay
+    // For the first iteration, yield immediately without delay
+    // This matches the callback-based behavior where the callback is called immediately
+    if (this.isFirstIteration) {
+      this.isFirstIteration = false
+      return { done: false, value: this.value as T }
+    }
+
+    // For subsequent iterations, wait for the delay BEFORE yielding
+    // This ensures the delay happens AFTER the previous iteration's work completes
     try {
       await new Promise<void>((resolve, reject) => {
         this.pendingReject = reject

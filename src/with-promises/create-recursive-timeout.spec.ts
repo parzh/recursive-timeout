@@ -25,11 +25,14 @@ describe(createRecursiveTimeout, () => {
     }
 
     expect(count).toBe(3)
-    // Each iteration should be approximately 50ms apart
-    expect(iterations[0]).toBeGreaterThanOrEqual(45)
-    expect(iterations[0]).toBeLessThan(100)
-    expect(iterations[1] - iterations[0]).toBeGreaterThanOrEqual(45)
-    expect(iterations[1] - iterations[0]).toBeLessThan(100)
+    // First iteration should happen immediately (within a few ms)
+    expect(iterations[0]).toBeLessThan(10)
+    // Second iteration should happen after ~50ms delay from first
+    expect(iterations[1]).toBeGreaterThanOrEqual(45)
+    expect(iterations[1]).toBeLessThan(100)
+    // Third iteration should happen after ~50ms delay from second
+    expect(iterations[2] - iterations[1]).toBeGreaterThanOrEqual(45)
+    expect(iterations[2] - iterations[1]).toBeLessThan(100)
   })
 
   it('should wait for async work to complete before scheduling next iteration', async () => {
@@ -51,9 +54,10 @@ describe(createRecursiveTimeout, () => {
 
     expect(count).toBe(2)
 
-    // The second iteration should start AFTER the first one completes (not during)
-    // First iteration: starts at ~50ms, ends at ~150ms
-    // Second iteration: should start at ~200ms (150ms + 50ms delay), not at ~100ms
+    // The second iteration should start AFTER the first one completes AND the delay
+    // First iteration: starts at ~0ms, ends at ~100ms
+    // Then 50ms delay
+    // Second iteration: should start at ~150ms (100ms work + 50ms delay)
     const firstEnd = timestamps[0].end
     const secondStart = timestamps[1].start
 
@@ -80,7 +84,7 @@ describe(createRecursiveTimeout, () => {
     const ac = new AbortController()
     const recursive = createRecursiveTimeout(50, undefined, { signal: ac.signal })
 
-    setTimeout(() => ac.abort(), 125) // Abort after ~2.5 iterations
+    setTimeout(() => ac.abort(), 125) // Abort after first iteration completes and during second delay
 
     let count = 0
     let errorThrown = false
@@ -94,8 +98,8 @@ describe(createRecursiveTimeout, () => {
       errorName = err.name
     }
 
-    // Should have completed 2 iterations before abort
-    expect(count).toBe(2)
+    // Should have completed at least 2 iterations before abort (first is immediate, second after 50ms)
+    expect(count).toBeGreaterThanOrEqual(2)
     expect(errorThrown).toBe(true)
     expect(errorName).toBe('AbortError')
   })

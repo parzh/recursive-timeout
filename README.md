@@ -109,24 +109,35 @@ The promise-based API uses `for await...of` loops and returns an AsyncIterator, 
 ```js
 import { setRecursive } from 'recursive-timeout/promises'
 
-// Basic usage - yields every 1000ms
+// Basic usage - first iteration happens immediately, then waits 1000ms between iterations
 for await (const _ of setRecursive(1000)) {
   console.log('tick')
   // break when done
 }
 ```
 
-**Key difference from Node.js `setInterval`:** The next iteration is scheduled **after** any async work in the loop body completes:
+**Key differences from Node.js `setInterval`:**
+
+1. **First iteration is immediate** (no initial delay)
+2. **Delay happens AFTER the loop body completes** (not before)
 
 ```js
 import { setRecursive } from 'recursive-timeout/promises'
+
+// Node.js setInterval behavior:
+// Wait 1000ms → yield → work (500ms) → Wait 1000ms → yield → work
+// Iterations at: 1000ms, 2000ms, 3000ms...
+
+// setRecursive behavior:
+// Yield immediately → work (500ms) → Wait 1000ms → yield → work (500ms) → Wait 1000ms
+// Iterations at: 0ms, 1500ms, 3000ms...
 
 for await (const _ of setRecursive(1000)) {
   console.log('start')
   await doAsyncWork() // Takes 500ms
   console.log('end')
   // Next iteration starts 1000ms AFTER doAsyncWork() completes
-  // (not 1000ms after the previous iteration started)
+  // Total time between iterations: 500ms (work) + 1000ms (delay) = 1500ms
 }
 ```
 
@@ -189,32 +200,41 @@ const { promises } = require('recursive-timeout')
 
 ## Promise-based API: Comparison with Node.js `timers/promises`
 
-The promise-based API is inspired by Node.js `timers/promises` but with a crucial difference:
+The promise-based API is inspired by Node.js `timers/promises` but with crucial differences:
 
 ### Node.js `setInterval` (from `timers/promises`)
+- Waits for delay **before** yielding
+- Schedules next iteration at fixed intervals regardless of work duration
+- First iteration waits for the delay
+
 ```js
 import { setInterval } from 'node:timers/promises'
 
 for await (const _ of setInterval(100)) {
   await asyncWork() // Takes 50ms
-  // Next iteration starts 100ms after the PREVIOUS one started
-  // (not after asyncWork completes)
+  // Iterations happen at fixed 100ms intervals
 }
 ```
-Schedule: 0ms → 100ms → 200ms → 300ms (regardless of async work)
+Timeline: **Wait 100ms** → yield → work (50ms) → **Wait 100ms** → yield → work (50ms)  
+Schedule: Yields at 100ms, 200ms, 300ms...
 
 ### `recursive-timeout` `setRecursive` (promise-based)
+- Yields **immediately** on first iteration
+- Waits for delay **after** work completes
+- Schedules next iteration after work finishes
+
 ```js
 import { setRecursive } from 'recursive-timeout/promises'
 
 for await (const _ of setRecursive(100)) {
   await asyncWork() // Takes 50ms
-  // Next iteration starts 100ms AFTER asyncWork completes
+  // Next iteration waits for work to complete, then delays
 }
 ```
-Schedule: 0ms → 150ms → 300ms → 450ms (waits for async work)
+Timeline: Yield immediately → work (50ms) → **Wait 100ms** → yield → work (50ms) → **Wait 100ms**  
+Schedule: Yields at 0ms, 150ms, 300ms...
 
-This is the same "recursive timeout" behavior as the callback-based API, but with the convenience of async iterators.
+This matches the "recursive timeout" behavior of the callback-based API, ensuring the delay happens between iterations, not before them.
 
 ## License
 
