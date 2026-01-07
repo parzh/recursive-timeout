@@ -84,17 +84,20 @@ describe(createRecursiveTimeout, () => {
 
     let count = 0
     let errorThrown = false
+    let errorName = ''
     try {
       for await (const _ of recursive) {
         count++
       }
     } catch (err: any) {
       errorThrown = true
+      errorName = err.name
     }
 
     // Should have completed 2 iterations before abort
     expect(count).toBe(2)
     expect(errorThrown).toBe(true)
+    expect(errorName).toBe('AbortError')
   })
 
   it('should support ref option', () => {
@@ -113,16 +116,19 @@ describe(createRecursiveTimeout, () => {
 
     let count = 0
     let errorThrown = false
+    let errorName = ''
     try {
       for await (const _ of recursive) {
         count++
       }
     } catch (err: any) {
       errorThrown = true
+      errorName = err.name
     }
 
     expect(count).toBe(0)
     expect(errorThrown).toBe(true)
+    expect(errorName).toBe('AbortError')
   })
 
   it('should be cancellable via clear() method', async () => {

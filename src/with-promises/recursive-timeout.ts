@@ -1,7 +1,3 @@
-export type ArgsShape = readonly unknown[]
-
-export type Callback<Args extends ArgsShape> = (...args: Args) => void | Promise<void>
-
 export interface RecursiveTimeoutOptions {
   /**
    * An optional AbortSignal to cancel the recursive timeout
@@ -51,7 +47,9 @@ export class RecursiveTimeout<T = undefined> implements AsyncIterator<T, void, u
       this.timer = undefined
     }
     if (this.pendingReject) {
-      this.pendingReject(new Error('Cleared'))
+      // Use proper AbortError when clearing
+      const reason = this.signal?.reason ?? new DOMException('The operation was aborted', 'AbortError')
+      this.pendingReject(reason)
       this.pendingReject = undefined
     }
     if (this.onAbort && this.signal) {
@@ -69,7 +67,7 @@ export class RecursiveTimeout<T = undefined> implements AsyncIterator<T, void, u
     // If signal was already aborted before first iteration, throw
     if (this.aborted) {
       this.clear()
-      throw this.signal?.reason ?? new Error('AbortError')
+      throw this.signal?.reason ?? new DOMException('The operation was aborted', 'AbortError')
     }
 
     // Wait for the delay
@@ -82,7 +80,7 @@ export class RecursiveTimeout<T = undefined> implements AsyncIterator<T, void, u
           this.pendingReject = undefined
           
           if (this.aborted || this.cleared) {
-            reject(this.signal?.reason ?? new Error('AbortError'))
+            reject(this.signal?.reason ?? new DOMException('The operation was aborted', 'AbortError'))
           } else {
             resolve()
           }
@@ -100,7 +98,7 @@ export class RecursiveTimeout<T = undefined> implements AsyncIterator<T, void, u
     // After waiting, check if we were cleared or aborted
     if (this.cleared || this.aborted) {
       this.clear()
-      throw this.signal?.reason ?? new Error('AbortError')
+      throw this.signal?.reason ?? new DOMException('The operation was aborted', 'AbortError')
     }
 
     return { done: false, value: this.value as T }
