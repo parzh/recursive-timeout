@@ -49,7 +49,10 @@ setRecursive(runsForOneSecond, 500)
 
 - **Dual Module Support:** Works seamlessly with both ECMAScript Modules (`import`) and CommonJS (`require`).
 - **Familiar API:** Designed as a drop-in replacement for `setInterval`.
-- **Promise-based API:** ⚠️ _(coming soon)_ ⚠️ A promise-based interface for use with asynchronous callbacks.
+- **Promise-based API:** A promise-based interface using `for await...of` loops, inspired by Node.js `timers/promises`.
+  - Returns an AsyncIterator for use with `for await...of`
+  - Supports AbortController for cancellation
+  - **Waits for async work to complete** before scheduling the next iteration (unlike Node.js `setInterval`)
 
 ## Installation
 
@@ -99,17 +102,59 @@ setRecursive(sum, 100, 42, 17)
 // ✅ OK (logs 59 every ~100 milliseconds)
 ```
 
-#### ECMAScript (promise-based) – _coming soon_ ⚠️
+#### ECMAScript (promise-based)
+
+The promise-based API uses `for await...of` loops and returns an AsyncIterator, similar to Node.js `timers/promises`:
 
 ```js
-import { setRecursive, clearRecursive } from 'recursive-timeout/promises'
+import { setRecursive } from 'recursive-timeout/promises'
+
+// Basic usage - yields every 1000ms
+for await (const _ of setRecursive(1000)) {
+  console.log('tick')
+  // break when done
+}
 ```
+
+**Key difference from Node.js `setInterval`:** The next iteration is scheduled **after** any async work in the loop body completes:
+
+```js
+import { setRecursive } from 'recursive-timeout/promises'
+
+for await (const _ of setRecursive(1000)) {
+  console.log('start')
+  await doAsyncWork() // Takes 500ms
+  console.log('end')
+  // Next iteration starts 1000ms AFTER doAsyncWork() completes
+  // (not 1000ms after the previous iteration started)
+}
+```
+
+**Cancellation with AbortController:**
+
+```js
+const controller = new AbortController()
+
+// Cancel after 5 seconds
+setTimeout(() => controller.abort(), 5000)
+
+try {
+  for await (const _ of setRecursive(1000, undefined, { signal: controller.signal })) {
+    console.log('tick')
+  }
+} catch (err) {
+  console.log('Cancelled')
+}
+```
+
+**Alternative import style:**
 
 ```js
 import { promises } from 'recursive-timeout'
 
-promises.setRecursive(…)
-promises.clearRecursive(…)
+for await (const _ of promises.setRecursive(1000)) {
+  console.log('tick')
+}
 ```
 
 #### CommonJS
@@ -118,18 +163,58 @@ promises.clearRecursive(…)
 const { setRecursive, clearRecursive } = require('recursive-timeout')
 ```
 
-#### CommonJS (promise-based) – _coming soon_ ⚠️
+#### CommonJS (promise-based)
 
 ```js
-const { setRecursive, clearRecursive } = require('recursive-timeout/promises')
+const { setRecursive } = require('recursive-timeout/promises')
+
+;(async () => {
+  for await (const _ of setRecursive(1000)) {
+    console.log('tick')
+  }
+})()
 ```
+
+**Alternative import style:**
 
 ```js
 const { promises } = require('recursive-timeout')
 
-promises.setRecursive(…)
-promises.clearRecursive(…)
+;(async () => {
+  for await (const _ of promises.setRecursive(1000)) {
+    console.log('tick')
+  }
+})()
 ```
+
+## Promise-based API: Comparison with Node.js `timers/promises`
+
+The promise-based API is inspired by Node.js `timers/promises` but with a crucial difference:
+
+### Node.js `setInterval` (from `timers/promises`)
+```js
+import { setInterval } from 'node:timers/promises'
+
+for await (const _ of setInterval(100)) {
+  await asyncWork() // Takes 50ms
+  // Next iteration starts 100ms after the PREVIOUS one started
+  // (not after asyncWork completes)
+}
+```
+Schedule: 0ms → 100ms → 200ms → 300ms (regardless of async work)
+
+### `recursive-timeout` `setRecursive` (promise-based)
+```js
+import { setRecursive } from 'recursive-timeout/promises'
+
+for await (const _ of setRecursive(100)) {
+  await asyncWork() // Takes 50ms
+  // Next iteration starts 100ms AFTER asyncWork completes
+}
+```
+Schedule: 0ms → 150ms → 300ms → 450ms (waits for async work)
+
+This is the same "recursive timeout" behavior as the callback-based API, but with the convenience of async iterators.
 
 ## License
 

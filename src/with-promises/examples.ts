@@ -3,9 +3,13 @@
  * 
  * This file shows various usage patterns of the setRecursive function
  * from the promises module, analogous to Node.js timers/promises API.
+ * 
+ * Note: This file is for documentation purposes and uses direct imports.
+ * In actual usage, import from 'recursive-timeout/promises'
  */
 
-import { setRecursive, clearRecursive } from './promises'
+import { createRecursiveTimeout as setRecursive } from './create-recursive-timeout'
+import { clearRecursiveTimeout as clearRecursive } from './clear-recursive-timeout'
 
 // Example 1: Basic usage with for await...of
 async function example1() {
